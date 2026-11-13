@@ -1,6 +1,6 @@
 # Hướng dẫn Git và GitHub qua một ví dụ thật
 
-Tài liệu này giải thích **từng bước mình đã làm** để đưa ghi chép của cuộc thi lên GitHub: mỗi bước có mục đích, lệnh, ý nghĩa của lệnh và kết quả mong đợi. Cuối tài liệu có phần các lỗi đã gặp thật và cách sửa.
+Tài liệu này giải thích **từng bước mình đã làm** để đưa ghi chép của cuộc thi lên GitHub: mỗi bước có mục đích, lệnh, ý nghĩa của lệnh và kết quả mong đợi. Có thêm phần giải thích khi nào cần token, phần dùng SSH thay token, và phần các lỗi đã gặp thật cùng cách sửa.
 
 Ví dụ dùng xuyên suốt: thư mục `~/zac2026-lifemate-notes` và repo `NavasPhuc/zac2026-lifemate-notes`.
 
@@ -18,7 +18,10 @@ Ví dụ dùng xuyên suốt: thư mục `~/zac2026-lifemate-notes` và repo `Na
 | **Nhánh (branch)** | Một dòng phát triển các phiên bản. Nhánh chính thường tên `main` |
 | **Remote / `origin`** | Địa chỉ repo trên mạng. `origin` chỉ là tên gọi tắt, giống lưu số điện thoại vào danh bạ |
 | **Push** | Gửi các commit từ máy lên GitHub |
-| **Token** | "Chìa khóa tạm" để chứng minh bạn là chủ tài khoản khi push |
+| **Token** | "Chìa khóa tạm" (một chuỗi ký tự, không phải đường link) để chứng minh bạn là chủ tài khoản khi push bằng địa chỉ HTTPS |
+| **SSH** | Cách xác thực khác, dùng một **cặp khóa** thay cho token. Thiết lập một lần, dùng cho mọi repo |
+| **Khóa công khai** (`.pub`) | "Ổ khóa": đưa cho GitHub, được phép chia sẻ |
+| **Khóa riêng tư** | "Chìa khóa": ở lại trên máy bạn, **không bao giờ chia sẻ** |
 
 ### Dòng chảy của một lần cập nhật
 
@@ -155,6 +158,8 @@ git remote -v
 
 Bước này **chưa gửi gì lên mạng**.
 
+> **Nếu bạn đã thiết lập SSH (xem phần 5):** dùng địa chỉ dạng SSH để khỏi phải làm Bước 9 (token). Repo mới: `git remote add origin git@github.com:NavasPhuc/zac2026-lifemate-notes.git`. Repo đã có `origin` dạng HTTPS: `git remote set-url origin git@github.com:NavasPhuc/zac2026-lifemate-notes.git`.
+
 ### Bước 9: Tạo token để chứng minh bạn là chủ tài khoản
 
 **Mục đích:** GitHub **không còn nhận mật khẩu thường** khi dùng Git từ terminal. Thay vào đó dùng token: một chuỗi ký tự dài, là "chìa khóa tạm" bạn tự cấp quyền và có thể thu hồi bất kỳ lúc nào.
@@ -196,6 +201,8 @@ Terminal hỏi hai câu:
 
 **Kết quả mong đợi:** vài dòng `Writing objects: 100%` và dòng cuối dạng `* [new branch] main -> main`.
 
+> **Nếu `origin` dùng địa chỉ SSH:** lệnh này **không hỏi** Username hay Password, bạn bỏ qua phần bảng hỏi ở trên.
+
 ### Bước 11: Thêm README và đẩy lần hai
 
 **Mục đích:** GitHub tự hiển thị file `README.md` ở trang chủ repo, giúp người mở link hiểu ngay repo là gì. Đây cũng là nhịp làm việc bạn sẽ lặp lại mỗi khi có thay đổi mới:
@@ -228,9 +235,299 @@ git push                        # gửi lên GitHub
 
 Ghi chú commit nên cho biết **việc đã làm**, ví dụ `Add stage 2 notes`, `Fix typo in README`.
 
+### Cập nhật một file đã có trên GitHub
+
+Khi bạn có bản mới của một file đã được đẩy lên, **không cần xóa hay upload lại**. Chỉ cần ghi đè file cũ trong thư mục repo bằng bản mới, rồi lặp lại nhịp `add`, `commit`, `push`. Git tự nhận ra file nào đã thay đổi, và bản cũ vẫn nằm trong lịch sử.
+
+```bash
+cd ~/zac2026-lifemate-notes
+pwd
+cp "$HOME/Downloads/huong-dan-git-github (1).md" docs/huong-dan-git-github.md
+git status
+git diff --stat
+git add docs/huong-dan-git-github.md
+git commit -m "Update Git guide: add token and SSH sections"
+git push
+```
+
+| Điểm cần nhớ | Giải thích |
+|---|---|
+| `pwd` | Kiểm tra bạn đang đứng đúng thư mục repo, không phải thư mục thực hành hay thư mục khác |
+| Tên file có khoảng trắng hoặc dấu `( )` phải đặt trong **ngoặc kép** | Nếu không, terminal báo `syntax error near unexpected token '('`. Mẹo: gõ vài chữ đầu của tên rồi nhấn Tab để terminal tự điền |
+| Vì sao file tải về có chữ `(1)` | Trình duyệt thêm `(1)` khi tên trùng với file đã có trong `Downloads` |
+| **Giữ nguyên tên cũ** trong repo | Để Git hiểu đây là cùng một file đã sửa. Đổi tên thì Git thấy là file mới |
+| `cp` ghi đè **không hỏi** | Kiểm tra kỹ tên file đích trước khi chạy |
+| `git status` phải ghi `modified:` | `modified` là file cũ có nội dung mới. `new file` là file mới hoàn toàn |
+| `git diff --stat` | Tóm tắt số dòng thêm hoặc xóa trong mỗi file |
+
+### Biết phiên bản nào là mới nhất
+
+Git **không đánh số** "phiên bản 1, phiên bản 2". Thay vào đó mỗi commit có ba thứ nhận diện:
+
+| Thứ | Ví dụ | Dùng để làm gì |
+|---|---|---|
+| Mã commit (hash) | `10ad462`, `5863e29` | Mã định danh duy nhất |
+| Ghi chú | `Add README` | Bạn tự viết, cho biết mốc làm gì |
+| Ngày giờ và tác giả | Git tự ghi | Biết mốc nào trước, mốc nào sau |
+
+Cách xem lịch sử:
+
+| Nơi | Cách làm |
+|---|---|
+| Trên máy | `git log --oneline` (mới nhất nằm **trên cùng**). Xem riêng một file: `git log --oneline -- docs/huong-dan-git-github.md` |
+| Trên GitHub | Mở repo → bấm vào file → nút **History** → bấm vào một commit để thấy dòng nào được thêm (xanh) hoặc xóa (đỏ) |
+| Trước khi commit | `git diff` cho thấy dòng nào bạn vừa sửa so với commit gần nhất |
+
+Cách "đặt tên phiên bản":
+1. **Ghi chú commit rõ ràng** (cách đơn giản nhất), ví dụ `Update Git guide: add token and SSH sections`.
+2. **Dùng tag** nếu muốn gắn nhãn cho các cột mốc lớn:
+
+```bash
+git tag v2-git-guide
+git push origin v2-git-guide
+```
+
+Lưu ý về tag:
+- Tag cần ít nhất một commit để gắn vào. Chạy `git tag` để xem danh sách tag đã có.
+- `git push origin <tên-tag>` chỉ đẩy **cái nhãn**, không cập nhật nhánh `main` trên GitHub. Hãy `git push` các commit trước, rồi mới đẩy tag.
+
 ---
 
-## 4. Các lỗi đã gặp thật và cách sửa
+## 4. Khi nào cần token, và token dùng cho những repo nào
+
+Token **không phải** thứ phải tạo cho mỗi dự án. Nó chỉ cần ở một vài tình huống:
+
+| Tình huống | Cần token không |
+|---|---|
+| Chỉ làm trên máy (`git init`, `git add`, `git commit`) | **Không**, vì chưa chạm đến GitHub |
+| Đẩy lên GitHub bằng địa chỉ HTTPS (`git push`) | **Có** |
+| Kéo (`git clone`) repo công khai của người khác | **Không** |
+| Tạo repo mới trên trang web github.com | **Không**, vì bạn đang đăng nhập tài khoản |
+
+### Một token dùng cho bao nhiêu repo?
+
+Phụ thuộc vào phần **Repository access** lúc tạo token:
+
+| Cách chọn | Token mở được | Ghi chú |
+|---|---|---|
+| Only select repositories | Chỉ các repo đã chọn | An toàn nhất. Có repo mới thì phải xử lý (xem dưới) |
+| All repositories | Mọi repo hiện tại và tương lai | Tiện, nhưng nếu lộ thì ảnh hưởng mọi repo |
+
+Khi tạo **repo mới** mà token cũ chỉ chọn repo cũ, bạn có hai cách:
+1. **Thêm repo mới vào token cũ:** Settings → Developer settings → Fine-grained tokens → bấm tên token → mục **Repository access** → thêm repo mới → lưu. Chuỗi token **không đổi**, nên bạn dùng lại chuỗi đã lưu. Chỉ dùng được khi bạn còn giữ chuỗi token và token chưa hết hạn.
+2. **Tạo token mới** cho repo mới.
+
+Token còn **hết hạn** (ví dụ 30 ngày), nên đến hạn thì dù cùng dự án vẫn phải tạo token mới. Muốn khỏi phải làm lại nhiều lần, dùng SSH (phần 5).
+
+---
+
+## 5. Dùng SSH thay token (thiết lập một lần)
+
+### Ý tưởng: ổ khóa và chìa khóa
+
+Bạn tạo một **cặp** khóa:
+
+| Khóa | Giống như | Để ở đâu | Có chia sẻ được không |
+|---|---|---|---|
+| Khóa công khai (`.pub`) | Ổ khóa | Đưa cho GitHub | Được |
+| Khóa riêng tư | Chìa khóa | Ở lại trên laptop | **Không bao giờ** |
+
+Bạn gắn "ổ khóa" vào tài khoản GitHub. Khi push, laptop dùng "chìa khóa" để chứng minh nó khớp với ổ khóa đó. Nhờ vậy không phải nhập token hay mật khẩu mỗi lần. Khóa riêng tư **không rời khỏi máy** và không tự hết hạn sau 30 ngày.
+
+Các bước 5.1 đến 5.4 chỉ cần làm **một lần cho cả máy**. Bước 5.5 làm cho từng repo.
+
+### Bước 5.1: Kiểm tra máy đã có khóa SSH chưa
+
+**Mục đích:** tránh tạo khóa mới **đè lên** khóa cũ (làm mất quyền truy cập vào những nơi đang dùng khóa cũ). Bước này chỉ đọc.
+
+```bash
+ssh -V
+ls -al ~/.ssh
+```
+
+| Kết quả | Nghĩa là |
+|---|---|
+| `OpenSSH_8.9...` hoặc tương tự | SSH đã cài (bình thường trên Ubuntu) |
+| `No such file or directory` hoặc thư mục `~/.ssh` trống | Chưa có khóa, an toàn để tạo mới |
+| Có file dạng `id_ed25519` và `id_ed25519.pub` (hoặc `id_rsa` và `id_rsa.pub`) | **Đã có khóa**, đừng tạo đè. Dùng lại hoặc tạo khóa với tên khác |
+
+### Bước 5.2: Tạo cặp khóa
+
+```bash
+ssh-keygen -t ed25519 -C "laptop-vivobook"
+```
+
+| Phần | Nghĩa |
+|---|---|
+| `-t ed25519` | Loại thuật toán hiện đại, ngắn và an toàn, GitHub khuyên dùng |
+| `-C "laptop-vivobook"` | Nhãn để sau này nhận ra khóa thuộc máy nào. Đặt tên máy thay vì email để không đưa email vào khóa |
+
+Terminal hỏi hai câu:
+1. `Enter file in which to save the key (...)`: nhấn **Enter** để dùng vị trí mặc định.
+2. `Enter passphrase (empty for no passphrase)`: **passphrase** là mật khẩu bảo vệ khóa riêng tư.
+
+| Lựa chọn passphrase | Ưu điểm | Nhược điểm |
+|---|---|---|
+| Đặt passphrase | Ai lấy được file khóa riêng tư vẫn chưa dùng được | Có thể phải nhập khi dùng |
+| Bỏ trống (Enter hai lần) | Không phải nhập gì | Ai chép được file khóa là dùng được ngay |
+
+Muốn thêm passphrase cho khóa đã tạo, dùng `ssh-keygen -p` (không cần tạo khóa mới). Khi gõ passphrase, màn hình không hiện ký tự nào.
+
+**Kết quả:** terminal in đường dẫn hai file, một dòng `SHA256:...` (dấu vân tay của khóa) và một khung hình vuông toàn ký tự. Kiểm tra bằng:
+
+```bash
+ls -l ~/.ssh
+```
+
+Sẽ có hai file: `id_ed25519` (khóa **riêng tư**, quyền `-rw-------`) và `id_ed25519.pub` (khóa **công khai**, đuôi `.pub`).
+
+> **Không bao giờ** gửi, mở ra copy, hoặc để trong thư mục repo file `id_ed25519` (không có đuôi). Chỉ file `.pub` mới được chia sẻ.
+
+### Bước 5.3: Đưa khóa công khai lên GitHub
+
+```bash
+cat ~/.ssh/id_ed25519.pub
+```
+
+Lệnh in ra **một dòng** dạng `ssh-ed25519 AAAAC3Nz... laptop-vivobook`. Bôi đen cả dòng, copy (`Ctrl + Shift + C` trong terminal Ubuntu).
+
+Trên github.com: ảnh đại diện → **Settings** → **SSH and GPG keys** → **New SSH key**, rồi điền:
+
+| Ô | Điền |
+|---|---|
+| Title | `laptop-vivobook` (tên để bạn nhận ra) |
+| Key type | Authentication Key (giữ mặc định) |
+| Key | Dán dòng vừa copy |
+
+Bấm **Add SSH key** (GitHub có thể hỏi xác nhận mật khẩu hoặc mã hai bước). Dấu vân tay `SHA256:...` hiện trên GitHub phải **trùng** với dòng terminal in lúc tạo khóa.
+
+### Bước 5.4: Kiểm tra kết nối từ laptop đến GitHub
+
+```bash
+ssh -T git@github.com
+```
+
+- `-T` chỉ kiểm tra kết nối, không mở điều khiển từ xa.
+- `git@github.com`: `git` là tên tài khoản đặc biệt mà GitHub dùng để nhận kết nối Git, **không phải tên của bạn**.
+
+Lần đầu tiên terminal hỏi:
+
+```
+Are you sure you want to continue connecting (yes/no/[fingerprint])?
+```
+
+Nghĩa là: "Đây là lần đầu máy bạn nói chuyện với github.com, có tin đúng là GitHub không?" (để chống kẻ mạo danh). Bạn đối chiếu dấu vân tay hiện ra với dấu vân tay ED25519 mà GitHub công bố:
+
+```
+SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU
+```
+
+Nếu khớp thì gõ **`yes`**. Nếu **không khớp**, nhấn `Ctrl + C` và không gõ `yes`. Có thể đối chiếu thêm trong tài liệu của GitHub về "SSH key fingerprints".
+
+**Kết quả thành công:**
+
+```
+Hi <tên tài khoản của bạn>! You've successfully authenticated, but GitHub does not provide shell access.
+```
+
+Câu có chữ "but" nghe như có vấn đề nhưng thật ra là **thành công**: GitHub nhận ra bạn nhờ khóa SSH, và nhắc rằng nó chỉ dùng kết nối này để nhận code, không cho điều khiển từ xa.
+
+### Bước 5.5: Đổi repo sang địa chỉ SSH rồi thử push
+
+Làm trong từng repo muốn dùng SSH:
+
+```bash
+cd ~/zac2026-lifemate-notes
+git remote set-url origin git@github.com:NavasPhuc/zac2026-lifemate-notes.git
+git remote -v
+git push
+```
+
+| Lệnh | Việc nó làm |
+|---|---|
+| `git remote set-url origin <địa chỉ mới>` | **Đổi** địa chỉ của `origin` đã có (không phải thêm mới) |
+| `git remote -v` | Hiện lại địa chỉ để kiểm tra |
+| `git push` | Thử đẩy. Nếu chưa có commit mới, lệnh chỉ kiểm tra kết nối |
+
+Hai dạng địa chỉ:
+
+| Dạng | Ví dụ | Xác thực bằng |
+|---|---|---|
+| HTTPS | `https://github.com/NavasPhuc/zac2026-lifemate-notes.git` | Username và token |
+| SSH | `git@github.com:NavasPhuc/zac2026-lifemate-notes.git` | Khóa SSH |
+
+Dạng SSH dùng dấu **`:`** sau `github.com`, không phải dấu `/`.
+
+**Kết quả mong đợi:** `git push` **không hỏi** Username hay Password, và in `Everything up-to-date` (kết nối thành công, chưa có commit mới để gửi). Để thử thật, sửa một chữ trong README rồi chạy cả nhịp `git add`, `git commit`, `git push`.
+
+### Khi dùng SSH: lệnh nào đổi, lệnh nào giữ nguyên
+
+Chỉ những lệnh **nói chuyện với GitHub** (đẩy, kéo, tải repo) bị ảnh hưởng bởi việc chuyển sang SSH. Các lệnh chỉ làm việc trên máy bạn (`git add`, `git commit`, `git status`, `git log`, `git diff`, `git tag`) **hoàn toàn không đổi**.
+
+| Việc | Lệnh | Khác gì so với HTTPS |
+|---|---|---|
+| Khai báo địa chỉ cho repo **mới** | `git remote add origin git@github.com:TEN_TAI_KHOAN/TEN_REPO.git` | Chỉ khác dạng địa chỉ |
+| Đổi repo **đã có** từ HTTPS sang SSH | `git remote set-url origin git@github.com:TEN_TAI_KHOAN/TEN_REPO.git` | Dùng `set-url` vì `origin` đã tồn tại (dùng `add` sẽ báo lỗi `remote origin already exists`) |
+| Kiểm tra đang dùng loại địa chỉ nào | `git remote -v` | `https://...` là dùng token, `git@github.com:...` là dùng SSH |
+| Đẩy lần đầu | `git push -u origin main` | Giống, nhưng **không hỏi** Username và Password |
+| Đẩy các lần sau | `git push` | Giống |
+| Đẩy một tag | `git push origin TEN_TAG` | Giống |
+| Tải repo về máy | `git clone git@github.com:TEN_TAI_KHOAN/TEN_REPO.git` | Chỉ khác dạng địa chỉ |
+| Kiểm tra SSH hoạt động | `ssh -T git@github.com` | Chỉ có khi dùng SSH |
+
+Nhớ: dạng SSH dùng dấu **`:`** sau `github.com`, dạng HTTPS dùng dấu `/`.
+
+### Quy trình một repo mới hoàn chỉnh bằng SSH
+
+So với các bước ở phần 2, **bỏ Bước 9 (tạo token)** và dùng địa chỉ SSH ở Bước 8:
+
+**Trên web (github.com):** New repository → đặt tên → để **trống** các ô README, .gitignore, license → Create repository.
+
+**Trên máy:**
+
+```bash
+mkdir -p ~/ten-repo
+cd ~/ten-repo
+git init
+# tạo .gitignore nếu thư mục có thể chứa thứ không được công khai
+# thêm file của bạn vào thư mục
+git status
+git add ten-file
+git commit -m "Initial commit"
+git branch -M main
+git remote add origin git@github.com:TEN_TAI_KHOAN/TEN_REPO.git
+git push -u origin main
+```
+
+| Lệnh | Việc nó làm | Tương ứng bước |
+|---|---|---|
+| `git init` | Biến thư mục thành repo | Bước 1 |
+| `git add`, `git commit` | Chọn file và lưu phiên bản | Bước 4 và 6 |
+| `git branch -M main` | Đặt tên nhánh chính là `main` | Bước 8 |
+| `git remote add origin <địa chỉ SSH>` | Khai báo nơi sẽ đẩy lên | Bước 8 |
+| `git push -u origin main` | Đẩy lên, không hỏi token | Bước 10 |
+
+Không cần tạo thêm khóa hay token nào cho mỗi repo mới. Khóa SSH đã đăng ký với tài khoản GitHub của bạn dùng được cho mọi repo của tài khoản đó.
+
+> **Nếu `git config user.name` chưa được thiết lập trong repo mới:** làm lại Bước 5 trong thư mục đó (lệnh không có `--global` chỉ có tác dụng trong repo hiện tại).
+
+### Dọn dẹp sau khi SSH hoạt động
+
+Khi bạn đã push thành công bằng SSH, token cũ không còn cần thiết. Vào Settings → Developer settings → Fine-grained tokens → bấm **Delete**, và xóa các bản token lưu tạm ở ghi chú hay file nào đó.
+
+### So sánh token và SSH
+
+| | Token (HTTPS) | SSH |
+|---|---|---|
+| Thiết lập | Tạo trên web, mỗi lần hết hạn lại tạo | Một lần cho cả máy |
+| Hết hạn | Có (bạn đặt) | Không tự hết hạn |
+| Phải nhập khi push | Có (ô Password) | Không |
+| Phạm vi | Chọn repo lúc tạo | Mọi repo của tài khoản |
+| Rủi ro nếu bị lộ | Chỉ trong phạm vi và thời hạn của token | Ai có khóa riêng tư là dùng được mọi repo, nên phải giữ kín và nên đặt passphrase |
+
+---
+
+## 6. Các lỗi đã gặp thật và cách sửa
 
 | Thông báo hoặc hiện tượng | Nguyên nhân | Cách sửa |
 |---|---|---|
@@ -240,6 +537,15 @@ Ghi chú commit nên cho biết **việc đã làm**, ví dụ `Add stage 2 note
 | `remote: invalid credentials` / `Authentication failed` | Ô Password không nhận đúng token: dán không thành công, token sai, thiếu hoặc dính khoảng trắng, hoặc dùng nhầm token đã xóa | Tạo token mới, copy ngay và kiểm tra đã dán được. Có thể kiểm tra độ dài và phần đầu (`github_pat_`) bằng lệnh `read -rs` mà không làm lộ token |
 | Không copy lại được token | Token chỉ hiện một lần | Xóa token đó và tạo token mới |
 | Push bị từ chối dù token đúng | Token thiếu quyền **Contents: Read and write**, hoặc không được cấp cho đúng repo | Sửa quyền hoặc tạo token mới với đúng thiết lập |
+| `fatal: not in a git directory` khi chạy `git config user.name ...` | Đang đứng **ngoài** repo. Lệnh không có `--global` cần ghi vào thư mục `.git` của repo hiện tại | `cd` vào thư mục repo (kiểm tra bằng `pwd`). Nếu thư mục chưa có `.git` thì chạy `git init` |
+| `fatal: not a git repository (or any of the parent directories): .git` khi chạy `git status` | Thư mục chưa được `git init` (ví dụ thư mục thực hành mới tạo) | Chạy `git init` trong thư mục đó |
+| `Permission denied (publickey)` khi dùng SSH | Khóa công khai chưa được thêm đúng vào GitHub, hoặc dán thiếu | Làm lại Bước 5.3, đối chiếu dấu vân tay, rồi chạy lại `ssh -T git@github.com` |
+| `Authentication failed` hoặc `Invalid username or token` khi push, mà `git remote -v` cho thấy địa chỉ dạng `https://` | Địa chỉ HTTPS đòi token, bạn chưa có token còn hiệu lực cho repo đó | Đổi sang SSH: `git remote set-url origin git@github.com:TEN_TAI_KHOAN/TEN_REPO.git`, rồi push lại |
+| `bash: syntax error near unexpected token '('` khi chạy `cp` | Tên file có khoảng trắng hoặc dấu ngoặc nhưng không đặt trong ngoặc kép | Đặt tên file trong ngoặc kép, hoặc gõ vài chữ đầu rồi nhấn Tab |
+| `error: src refspec TEN_TAG does not match any` khi đẩy tag | Tag chưa được tạo trong thư mục này, hoặc chưa có commit nào | Chạy `git tag` để xem danh sách. Tạo commit trước, rồi `git tag TEN_TAG` |
+| `fatal: remote origin already exists` | Dùng `git remote add` khi `origin` đã có | Dùng `git remote set-url origin <địa chỉ mới>` để đổi |
+
+> **Mẹo nhận biết đang ở trong repo hay không:** chạy `git status`. Nếu in `On branch main` thì bạn đang ở trong repo. Nếu in `fatal: not a git repository` thì bạn đang ở ngoài.
 
 ### Các lỗi khác có thể gặp (chưa gặp trong ví dụ này)
 
@@ -251,7 +557,7 @@ Ghi chú commit nên cho biết **việc đã làm**, ví dụ `Add stage 2 note
 
 ---
 
-## 5. Quy tắc an toàn cần nhớ
+## 7. Quy tắc an toàn cần nhớ
 
 1. **Tạo `.gitignore` trước khi `git add`.** Đây là lưới an toàn cho dữ liệu không được công khai.
 2. **Luôn chạy `git status` trước khi commit** để biết chính xác cái gì sắp được lưu.
@@ -259,3 +565,5 @@ Ghi chú commit nên cho biết **việc đã làm**, ví dụ `Add stage 2 note
 4. **Tên và email trong commit là công khai.** Chọn email bạn chấp nhận để lộ, hoặc dùng email ẩn danh của GitHub.
 5. **Token là bí mật.** Cấp quyền tối thiểu, chỉ một repo, đặt thời hạn ngắn, không chia sẻ, và xóa ngay nếu lộ.
 6. **Dữ liệu và tài liệu của cuộc thi có điều khoản riêng.** Repo chỉ chứa code và ghi chép của riêng bạn, không chứa dữ liệu, âm thanh, file nhãn hay thư viện của ban tổ chức. Nên đọc điều khoản về việc công bố giải pháp và kết quả trước khi đăng.
+7. **Khóa SSH riêng tư (file `id_ed25519`, không có đuôi `.pub`) là bí mật tuyệt đối.** Không gửi, không dán vào chat, không để trong thư mục repo. Chỉ file `.pub` mới được chia sẻ. Cân nhắc đặt passphrase để nếu file bị lấy thì vẫn chưa dùng được.
+8. **Trước khi tạo khóa SSH mới, kiểm tra `~/.ssh`** để không ghi đè khóa đang dùng ở nơi khác.
