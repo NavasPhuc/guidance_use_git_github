@@ -529,6 +529,8 @@ Khi bạn đã push thành công bằng SSH, token cũ không còn cần thiết
 
 ## 6. Các lỗi đã gặp thật và cách sửa
 
+> Bảng dưới đây là bản tóm tắt nhanh. Phần giải thích đầy đủ từng lỗi (chuyện gì xảy ra, sai ở đâu, cách sửa, ý nghĩa của từng lệnh sửa, cách phòng tránh) nằm ở **phần 8**.
+
 | Thông báo hoặc hiện tượng | Nguyên nhân | Cách sửa |
 |---|---|---|
 | `python: command not found` | Ubuntu chỉ có lệnh `python3` | Dùng `python3`, hoặc bật môi trường ảo (`source .venv/bin/activate`) thì `python` chạy được |
@@ -567,3 +569,348 @@ Khi bạn đã push thành công bằng SSH, token cũ không còn cần thiết
 6. **Dữ liệu và tài liệu của cuộc thi có điều khoản riêng.** Repo chỉ chứa code và ghi chép của riêng bạn, không chứa dữ liệu, âm thanh, file nhãn hay thư viện của ban tổ chức. Nên đọc điều khoản về việc công bố giải pháp và kết quả trước khi đăng.
 7. **Khóa SSH riêng tư (file `id_ed25519`, không có đuôi `.pub`) là bí mật tuyệt đối.** Không gửi, không dán vào chat, không để trong thư mục repo. Chỉ file `.pub` mới được chia sẻ. Cân nhắc đặt passphrase để nếu file bị lấy thì vẫn chưa dùng được.
 8. **Trước khi tạo khóa SSH mới, kiểm tra `~/.ssh`** để không ghi đè khóa đang dùng ở nơi khác.
+
+---
+
+## 8. Nhật ký lỗi chi tiết: sai ở đâu, cách sửa, ý nghĩa từng lệnh
+
+Phần này kể lại các lỗi **đã xảy ra thật** trong quá trình thực hành. Với mỗi lỗi có: chuyện gì xảy ra, sai ở đâu, cách sửa, ý nghĩa từng lệnh sửa, và cách phòng tránh. Mắc lỗi khi học là chuyện bình thường, và đọc được thông báo lỗi là một kỹ năng đáng luyện.
+
+### Tóm tắt
+
+| # | Lỗi | Nguyên nhân gốc | Cách phòng tránh ngắn gọn |
+|---|---|---|---|
+| 1 | Tên lưu thành `<PhucTran>` | Gõ cả dấu `< >` của hướng dẫn | `< >` chỉ đánh dấu chỗ cần thay, không gõ |
+| 2 | Token chọn nhầm quyền | Chọn "Repository creation" thay vì "Contents" | Quyền ghi nội dung là **Contents: Read and write** |
+| 3 | Token dán vào ô Username | Hai ô nhập nằm liền nhau | Ô hiện chữ khi gõ là Username, ô im lặng là Password |
+| 4 | Không copy được token, dán không được | Token chỉ hiện một lần, hoặc dán không thành công | Copy ngay, kiểm tra đã dán được trước khi rời trang |
+| 5 | `not in a git directory` hoặc `not a git repository` | Đứng ngoài repo, hoặc thư mục chưa `git init` | `pwd` và `git status` trước khi làm |
+| 6 | `syntax error near unexpected token '('` | Tên file có `( )` nhưng thiếu ngoặc kép | Đặt tên file trong ngoặc kép hoặc dùng phím Tab |
+| 7 | Push repo thực hành bị đòi token | `origin` dùng địa chỉ HTTPS | Đổi `origin` sang địa chỉ SSH |
+| 8 | Tag v3 không chứa nội dung mới | Gắn tag **trước** khi commit | Thứ tự: `add`, `commit`, `push`, rồi mới `tag` |
+| 9 | Hiểu nhầm `nothing to commit, working tree clean` | Tưởng là lỗi | Đó chỉ là "không còn thay đổi nào chưa lưu" |
+| 10 | Máy và GitHub lệch nhau về tag | Xóa tag ở một nơi (trang web) | Kiểm tra cả hai nơi: `git tag` và `git ls-remote --tags origin` |
+| 11 | Chép nhầm phiên bản file | Trình duyệt đặt tên `(1)`, `(2)`... | Chọn file có số lớn nhất, kiểm tra bằng `grep -n "^## "` |
+
+---
+
+### Lỗi 1: Gõ cả dấu `< >` khi khai báo tên và email
+
+**Chuyện gì xảy ra:** lệnh `git config user.name "<PhucTran>"` được gõ nguyên văn. Git lưu tên là `<PhucTran>` (có ngoặc nhọn), email cũng có ngoặc nhọn.
+
+**Sai ở đâu:** trong hướng dẫn, dấu `< >` chỉ dùng để đánh dấu "thay phần này bằng thông tin của bạn". Nó không phải một phần của lệnh.
+
+**Cách sửa:**
+
+```bash
+git config user.name "PhucTran"
+git config user.email "email-cua-ban"
+git config user.name
+git config user.email
+```
+
+| Lệnh | Ý nghĩa |
+|---|---|
+| `git config user.name "..."` | **Ghi** tên tác giả vào cấu hình của repo hiện tại. Ghi lại lần nữa sẽ **đè** giá trị cũ |
+| `git config user.email "..."` | Tương tự cho email |
+| `git config user.name` (không có giá trị) | **Đọc** lại giá trị đang lưu để kiểm tra |
+
+**Phòng tránh:** sau khi cấu hình, luôn đọc lại và nhìn xem có dấu `<` `>` nào còn sót không.
+
+---
+
+### Lỗi 2: Chọn nhầm quyền cho token
+
+**Chuyện gì xảy ra:** ở phần Permissions của token, bạn thêm **Repository creation** (quyền tạo repo mới) thay vì quyền cần thiết.
+
+**Sai ở đâu:** muốn `git push` thì token cần quyền **ghi nội dung** của repo, tên là **Contents**. Quyền Repository creation không cho phép đẩy code, và còn rộng hơn mức cần thiết.
+
+**Cách sửa:**
+1. Bấm dấu **X** bên phải dòng Repository creation để bỏ quyền này.
+2. Bấm **Add permissions**, gõ `Contents` vào ô tìm kiếm, tick chọn.
+3. Ở dòng Contents, đổi **Access** thành **Read and write**.
+4. Kết quả đúng: Permissions có 2 dòng, Metadata (Read-only, tự có sẵn) và Contents (Read and write).
+
+| Quyền | Ý nghĩa |
+|---|---|
+| Contents: Read and write | Đọc và **ghi file** trong repo, tức là cho phép `git push` |
+| Metadata: Read-only | Đọc thông tin cơ bản của repo, bắt buộc và tự có sẵn |
+
+**Phòng tránh:** theo nguyên tắc "quyền tối thiểu": chỉ cấp đúng quyền cần dùng, và chỉ chọn đúng repo cần thiết ("Only select repositories").
+
+---
+
+### Lỗi 3: Dán token vào ô Username
+
+**Chuyện gì xảy ra:** khi `git push`, bạn dán token vào ô `Username`, và ô Password để trống. GitHub trả về `Invalid username or token. Password authentication is not supported for Git operations.` Token còn hiện rõ trên màn hình (và nếu chụp hay gửi đi đâu đó thì đã bị lộ).
+
+**Sai ở đâu:** hai ô nhập nằm liền nhau. Username là **tên tài khoản** (ví dụ `NavasPhuc`), còn token dán ở ô **Password**.
+
+**Cách sửa:**
+1. **Coi token đó là đã lộ**: vào Settings → Developer settings → Fine-grained tokens, bấm **Delete** token đó.
+2. Tạo token mới (hoặc chuyển sang SSH, xem phần 5).
+3. Push lại, nhập đúng: Username là `NavasPhuc`, Password là token.
+
+| Việc | Ý nghĩa |
+|---|---|
+| Xóa token đã lộ | Giống mất chìa khóa nhà thì thay ổ khóa: token cũ hết hiệu lực ngay |
+| Nhập token ở ô Password | Đúng chỗ GitHub đọc "mật khẩu" |
+
+**Phòng tránh:** ô **hiện chữ khi gõ** là Username, ô **im lặng không hiện ký tự nào** mới là chỗ dán token. Nếu dán token mà thấy chữ hiện lên thì dừng lại, nhấn `Ctrl + C`.
+
+---
+
+### Lỗi 4: Không copy được token, hoặc dán không thành công
+
+**Chuyện gì xảy ra:** token chưa được copy kịp, hoặc đã rời trang mà không lưu. Lần khác, push báo `remote: invalid credentials` vì ô Password nhận chuỗi sai hoặc rỗng.
+
+**Sai ở đâu:** token **chỉ hiện đúng một lần** lúc tạo xong, sau đó không xem lại được. Ngoài ra ô Password không hiện ký tự nên không biết dán có thành công không.
+
+**Cách sửa:**
+1. Xóa token cũ (nút **Delete**), tạo token mới với cùng thiết lập.
+2. Copy ngay, mở Text Editor, dán thử để chắc chắn đã copy được, rồi mới rời trang GitHub.
+3. Có thể kiểm tra chuỗi đã dán vào terminal đúng chưa mà không làm lộ token:
+
+```bash
+read -rs -p "Dán token rồi Enter: " T; echo
+echo "Độ dài: ${#T}"
+echo "11 ký tự đầu: ${T:0:11}"
+case "$T" in *[[:space:]]*) echo "Có khoảng trắng: CÓ";; *) echo "Có khoảng trắng: KHÔNG";; esac
+unset T
+```
+
+| Phần | Ý nghĩa |
+|---|---|
+| `read -rs` | Nhận chuỗi bạn dán **mà không hiện ra màn hình** |
+| `${#T}` | Độ dài chuỗi. Token loại này thường khoảng 93 ký tự. Độ dài 0 nghĩa là dán chưa thành công |
+| `${T:0:11}` | 11 ký tự đầu, phải là `github_pat_` |
+| `case ... *[[:space:]]*` | Kiểm tra có dấu cách dính ở đầu hoặc cuối không |
+| `unset T` | Xóa chuỗi khỏi bộ nhớ terminal |
+
+**Phòng tránh:** trong terminal Ubuntu, dán bằng `Ctrl + Shift + V` hoặc chuột phải → Paste (`Ctrl + V` không dùng được). Hoặc dùng SSH để khỏi phải xử lý token.
+
+---
+
+### Lỗi 5: Chạy lệnh Git khi không đứng trong repo
+
+**Chuyện gì xảy ra:** hai thông báo khác nhau cùng một nguyên nhân:
+- `fatal: not in a git directory` khi chạy `git config user.name ...`
+- `fatal: not a git repository (or any of the parent directories): .git` khi chạy `git status` trong thư mục thực hành.
+
+**Sai ở đâu:** Git chỉ làm việc trong thư mục đã được `git init` (có thư mục ẩn `.git`). Lệnh `git config` không có `--global` cần ghi vào `.git` của repo hiện tại, nên ngoài repo thì không có chỗ để ghi.
+
+**Cách sửa:**
+
+```bash
+pwd
+cd ~/zac2026-lifemate-notes
+git status
+```
+
+Nếu thư mục chưa phải repo (ví dụ thư mục thực hành mới tạo), chạy:
+
+```bash
+git init
+git status
+```
+
+| Lệnh | Ý nghĩa |
+|---|---|
+| `pwd` | In ra thư mục bạn đang đứng, để biết mình ở đâu |
+| `cd <thư mục>` | Đi vào thư mục repo |
+| `git init` | Biến thư mục hiện tại thành repo (tạo `.git`) |
+| `git status` | Nếu in `On branch ...` thì bạn đang ở trong repo; nếu in `fatal: not a git repository` thì bạn đang ở ngoài |
+
+**Phòng tránh:** đầu mỗi phiên làm việc, chạy `pwd` và `git status`. Ngoài ra nên đặt dòng nhắc lệnh để hiển thị tên thư mục (mặc định Ubuntu đã hiện, ví dụ `~/zac2026-lifemate-notes$`).
+
+---
+
+### Lỗi 6: Tên file có dấu ngoặc, thiếu ngoặc kép (và đứng nhầm thư mục)
+
+**Chuyện gì xảy ra:** lệnh `cp ~/Downloads/huong-dan-git-github (1).md docs/huong-dan-git-github.md` báo `bash: syntax error near unexpected token '('`. Lúc đó bạn cũng đang đứng ở thư mục thực hành, không phải repo thật.
+
+**Sai ở đâu:** trong terminal, khoảng trắng và dấu `( )` có ý nghĩa đặc biệt. Nếu không đặt tên file trong ngoặc kép, terminal hiểu sai.
+
+**Cách sửa:**
+
+```bash
+cd ~/zac2026-lifemate-notes
+pwd
+cp "$HOME/Downloads/huong-dan-git-github (1).md" docs/huong-dan-git-github.md
+git status
+git diff --stat
+```
+
+| Lệnh | Ý nghĩa |
+|---|---|
+| `"..."` (ngoặc kép) | Báo cho terminal: "mọi thứ bên trong là **một cái tên**" |
+| `$HOME` | Đường dẫn thư mục cá nhân của bạn, an toàn khi nằm trong ngoặc kép |
+| `cp A B` | Sao chép A đè lên B, **ghi đè không hỏi** |
+| `git status` | Phải ghi `modified:` (file cũ có nội dung mới) |
+| `git diff --stat` | Tóm tắt số dòng thêm và xóa |
+
+**Phòng tránh:** gõ vài chữ đầu của tên file rồi nhấn **Tab** để terminal tự điền và tự xử lý ký tự đặc biệt. Luôn `pwd` trước khi chép file vào repo.
+
+---
+
+### Lỗi 7: Push repo thực hành bị đòi token
+
+**Chuyện gì xảy ra:** `git push origin v2-git-guide` hỏi Username và Password rồi báo `Authentication failed`.
+
+**Sai ở đâu:** `origin` của repo thực hành dùng địa chỉ **HTTPS** (`https://github.com/...`), loại này luôn đòi token. Bạn chưa có token còn hiệu lực cho repo đó.
+
+**Cách sửa:** đổi `origin` sang địa chỉ **SSH** (sau khi đã thiết lập SSH ở phần 5):
+
+```bash
+git remote -v
+git remote set-url origin git@github.com:NavasPhuc/guidance_use_git_github.git
+git remote -v
+git push origin v2-git-guide
+```
+
+| Lệnh | Ý nghĩa |
+|---|---|
+| `git remote -v` | Xem địa chỉ `origin` hiện tại (`https://...` là dùng token, `git@github.com:...` là dùng SSH) |
+| `git remote set-url origin <địa chỉ>` | **Đổi** địa chỉ của `origin` đã có. Dùng `add` sẽ báo `remote origin already exists` |
+| `git push origin <tag>` | Đẩy tag lên GitHub |
+
+**Phòng tránh:** với mọi repo mới, dùng địa chỉ SSH ngay từ đầu (`git remote add origin git@github.com:...`).
+
+---
+
+### Lỗi 8: Gắn tag trước khi commit
+
+**Chuyện gì xảy ra:** bạn chép file mới vào (`git status` ghi `modified`), rồi chạy `git tag v3-git-guidance` và `git push origin v3-git-guidance`. Tag lên GitHub nhưng phiên bản đó **không chứa nội dung mới**. Dòng `Total 0 (delta 0)` lúc push là dấu hiệu: không có dữ liệu mới nào được gửi.
+
+**Sai ở đâu:** tag là cái **nhãn dán lên một commit đã tồn tại**, không chứa nội dung. Khi chưa `commit`, nội dung mới chưa nằm trong commit nào, nên nhãn dán lên commit **cũ**. Ví dụ đời thường: viết xong tài liệu nhưng chưa bấm Lưu, rồi dán nhãn "bản 3" lên bản đã lưu lần trước.
+
+**Thứ tự đúng:**
+
+```
+sửa file  →  git add  →  git commit  →  git push  →  git tag  →  git push (tag)
+```
+
+**Cách sửa:**
+
+```bash
+git add docs/huong-dan-git-github.md
+git commit -m "Update Git guide: add token and SSH sections"
+git push
+git tag -d v3-git-guidance
+git tag v3-git-guidance
+git push origin v3-git-guidance
+git log --oneline --decorate
+```
+
+(Nếu tag cũ đã đẩy lên GitHub thì thêm `git push origin --delete v3-git-guidance` trước khi tạo lại.)
+
+| Lệnh | Ý nghĩa |
+|---|---|
+| `git add <file>` | Đưa file đã sửa vào khu vực chuẩn bị |
+| `git commit -m "..."` | Lưu thành một phiên bản mới |
+| `git push` | Gửi commit lên GitHub |
+| `git tag -d <tag>` | Gỡ nhãn cũ **trên máy** (`-d` là delete) |
+| `git push origin --delete <tag>` | Gỡ nhãn cũ **trên GitHub** |
+| `git tag <tag>` | Dán nhãn lên commit **hiện tại** (commit mới nhất) |
+| `git push origin <tag>` | Đẩy nhãn lên GitHub. Chỉ đẩy nhãn, **không** cập nhật nhánh `main` |
+| `git log --oneline --decorate` | Xem nhãn đang nằm ở commit nào |
+
+**Kết quả đúng** (nhãn nằm ở commit trên cùng):
+
+```
+2b08feb (HEAD -> main, tag: v3-git-guidance, origin/main) Update Git guide: add token and SSH sections
+8aef37b (tag: v2-git-guide) Application git in project
+```
+
+**Lưu ý thực tế:** dời tag chỉ nên làm ở repo thực hành. Ở dự án thật mà người khác đã dùng tag đó, hãy **tạo tag mới** (ví dụ `v4`) thay vì sửa tag cũ.
+
+---
+
+### Lỗi 9: Hiểu nhầm `nothing to commit, working tree clean`
+
+**Chuyện gì xảy ra:** `git commit` báo `nothing to commit, working tree clean`, bạn tưởng đây là lỗi.
+
+**Sai ở đâu:** không có gì sai. Thông báo nghĩa là thư mục làm việc **giống hệt** phiên bản đã lưu gần nhất, không còn thay đổi nào chưa lưu. Trong ví dụ này, nguyên nhân là nội dung mới **đã được commit từ trước**, và lần chạy `git commit` này là lần thứ hai.
+
+**Cách kiểm tra** (chỉ đọc, không thay đổi gì):
+
+```bash
+git log --oneline --decorate
+git status
+grep -n "^## " docs/huong-dan-git-github.md
+```
+
+| Lệnh | Ý nghĩa |
+|---|---|
+| `git log --oneline --decorate` | Xem các commit đã có và nhãn nằm ở đâu |
+| `git status` | Xem còn thay đổi nào chưa lưu không |
+| `grep -n "^## " <file>` | Liệt kê các tiêu đề mục lớn trong file để biết đang là bản nào (số mục và tên mục) |
+
+**Phòng tránh:** thông báo của Git đọc kỹ thường tự nói rõ. Hãy đọc từng dòng thay vì chỉ nhìn dòng cuối.
+
+---
+
+### Lỗi 10: Máy và GitHub lệch nhau về tag
+
+**Chuyện gì xảy ra:** bạn xóa tag `v3` trên **trang web GitHub**, nhưng tag vẫn còn trên máy. Hai nơi không khớp nhau.
+
+**Sai ở đâu:** tag tồn tại **độc lập ở từng nơi** (máy và GitHub). Xóa ở nơi này không tự xóa ở nơi kia.
+
+**Cách kiểm tra và sửa:**
+
+```bash
+git tag
+git ls-remote --tags origin
+git tag -d v3-git-guidance
+git tag v3-git-guidance
+git push origin v3-git-guidance
+git log --oneline --decorate
+git ls-remote --tags origin
+```
+
+| Lệnh | Ý nghĩa |
+|---|---|
+| `git tag` | Liệt kê tag **trên máy** |
+| `git ls-remote --tags origin` | Liệt kê tag **trên GitHub** (kèm mã commit mà mỗi tag trỏ tới) |
+| Các lệnh còn lại | Xóa nhãn cũ trên máy, dán lại lên commit đúng, đẩy lên GitHub |
+
+**Cách đọc kết quả:** hai nhãn trỏ vào hai mã commit khác nhau nghĩa là chúng nằm ở hai phiên bản khác nhau. Nếu hai nơi trỏ cùng một mã thì hai nơi đang khớp nhau.
+
+**Phòng tránh:** chọn một nơi thống nhất để thao tác với tag (khuyên dùng dòng lệnh) và luôn kiểm tra lại cả hai nơi sau khi sửa.
+
+---
+
+### Lỗi 11: Chép nhầm phiên bản của file
+
+**Chuyện gì xảy ra:** file tải về có tên `huong-dan-git-github (1).md`, `(2)`... và không chắc bản nào mới nhất.
+
+**Sai ở đâu:** khi tên trùng, trình duyệt thêm số `(n)` vào tên file để không đè lên file cũ. Số lớn nhất thường là bản tải về sau cùng. Bạn dễ chép nhầm bản cũ hơn vào repo.
+
+**Cách sửa và kiểm tra:**
+
+```bash
+ls ~/Downloads | grep huong
+grep -n "^## " "$HOME/Downloads/huong-dan-git-github (1).md"
+grep -n "^## " docs/huong-dan-git-github.md
+diff docs/huong-dan-git-github.md "$HOME/Downloads/huong-dan-git-github (1).md" | head -20
+```
+
+| Lệnh | Ý nghĩa |
+|---|---|
+| `ls ~/Downloads \| grep huong` | Liệt kê tất cả các bản đã tải để biết số `(n)` lớn nhất |
+| `grep -n "^## " <file>` | Liệt kê các mục lớn của từng bản để so sánh |
+| `diff A B` | Hiện các dòng khác nhau. Dòng bắt đầu bằng `>` là có ở file B mà A không có. Không in gì nghĩa là hai file giống hệt |
+
+**Phòng tránh:** sau khi tải bản mới, đổi tên về tên chuẩn hoặc xóa các bản cũ trong Downloads. Sau khi chép vào repo, dùng `git diff --stat` để xem Git thấy bao nhiêu dòng thay đổi.
+
+---
+
+### Danh sách kiểm tra trước khi push
+
+1. `pwd` — đang đứng đúng thư mục repo?
+2. `git status` — chính xác những gì sắp được lưu? Có file nào không nên có không?
+3. `git add <tên file>` — thêm từng file thay vì `git add .` khi repo có thể chứa thứ nhạy cảm.
+4. `git commit -m "Mô tả ngắn việc đã làm"`.
+5. `git push` — không hỏi gì (nếu dùng SSH).
+6. Nếu cần tag: `git tag <tên>` **sau** commit, rồi `git push origin <tên>`.
+7. `git log --oneline --decorate` — xem lại kết quả, và mở trang GitHub (F5) để kiểm tra bằng mắt.
